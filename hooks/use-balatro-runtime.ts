@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 
+import { getActiveBalatroVersion, MODDED_VERSION, readModState } from "@/lib/mod-storage";
+
 type RuntimeStatus = "idle" | "building" | "ready" | "running" | "error";
 
 type BuildProgress = {
@@ -196,6 +198,49 @@ export function useBalatroRuntime() {
     [setFailure],
   );
 
+  const rebuildWithMods = useCallback(
+    async (mods: Record<string, unknown>) => {
+      try {
+        setError(null);
+        setStatus("building");
+        setProgress({ label: "Loading clean build", value: 0 });
+
+        await ensureBuildScripts();
+        const sourceGame = await getRuntimeWindow().loadCachedGame?.(VANILLA_VERSION);
+
+        if (!sourceGame) {
+          throw new Error("Set up Balatro before rebuilding mods.");
+        }
+
+        const { progress: progressEl, status: statusEl } = ensureLegacyBuildTargets();
+        const progressTimer = window.setInterval(() => {
+          setProgress({
+            label: statusEl.textContent || "Rebuilding",
+            value: Number(progressEl.value) || 0,
+          });
+        }, 120);
+
+        try {
+          const builtGame = await getRuntimeWindow().buildFromSource?.(sourceGame, mods);
+
+          if (!builtGame) {
+            throw new Error("Balatro did not produce a modded build.");
+          }
+
+          setProgress({ label: "Saving modded build", value: 95 });
+          await getRuntimeWindow().saveGameToCache?.(builtGame, MODDED_VERSION);
+          setProgress({ label: "Ready", value: 100 });
+          setStatus("ready");
+        } finally {
+          window.clearInterval(progressTimer);
+        }
+      } catch (unknownError) {
+        setFailure(unknownError);
+      }
+    },
+    [setFailure],
+  );
+
   const launch = useCallback(
     async (canvasEl: HTMLCanvasElement) => {
       if (launchPromiseRef.current) {
@@ -209,13 +254,15 @@ export function useBalatroRuntime() {
           setProgress({ label: "Loading cached build", value: 20 });
 
           await ensureBuildScripts();
-          const cachedGame = await getRuntimeWindow().loadCachedGame?.(VANILLA_VERSION);
+          const modState = await readModState().catch(() => null);
+          const version = modState ? getActiveBalatroVersion(modState) : VANILLA_VERSION;
+          const cachedGame = await getRuntimeWindow().loadCachedGame?.(version);
 
           if (!cachedGame) {
             throw new Error("Set up Balatro before launching it.");
           }
 
-          patchIndexedDbForVersion(VANILLA_VERSION);
+          patchIndexedDbForVersion(version);
 
           const data = new Uint8Array(await cachedGame.arrayBuffer());
           const runtimeWindow = getRuntimeWindow();
@@ -307,6 +354,7 @@ export function useBalatroRuntime() {
     error,
     clearError,
     buildFromFile,
+    rebuildWithMods,
     launch,
     hasCachedVersion,
   };

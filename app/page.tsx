@@ -78,6 +78,7 @@ export default function LibraryPage() {
               icon={game.icon}
               isChecking={game.id === "balatro" && hasBalatro === null}
               launchHref={game.id === "balatro" && hasBalatro ? "/play/balatro" : undefined}
+              modsHref={game.id === "balatro" ? "/library/balatro/mods" : undefined}
               onSetupClick={
                 game.id === "balatro" && !hasBalatro
                   ? () => document.getElementById("balatro-setup")?.scrollIntoView({ behavior: "smooth" })

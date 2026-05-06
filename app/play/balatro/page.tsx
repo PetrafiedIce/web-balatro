@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Maximize2, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { GameCanvas } from "@/components/game-canvas";
@@ -62,6 +63,9 @@ export default function BalatroPlayPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link href="/library/balatro/mods">Mods</Link>
+          </Button>
           <Button aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} size="icon" variant="outline" onClick={toggleFullscreen}>
             <Maximize2 className="h-4 w-4" />
           </Button>

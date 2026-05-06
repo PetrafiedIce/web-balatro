@@ -16,6 +16,7 @@ type GameCardProps = {
   isChecking?: boolean;
   onSetupClick?: () => void;
   launchHref?: string;
+  modsHref?: string;
 };
 
 export function GameCard({
@@ -26,6 +27,7 @@ export function GameCard({
   isChecking = false,
   onSetupClick,
   launchHref,
+  modsHref,
 }: GameCardProps) {
   const isLocked = status === "locked";
   const isReady = status === "ready";
@@ -51,13 +53,27 @@ export function GameCard({
             Coming soon
           </Button>
         ) : isReady && launchHref ? (
-          <Button asChild className="w-full">
-            <Link href={launchHref}>Launch</Link>
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button asChild>
+              <Link href={launchHref}>Launch</Link>
+            </Button>
+            {modsHref ? (
+              <Button asChild variant="secondary">
+                <Link href={modsHref}>Mods</Link>
+              </Button>
+            ) : null}
+          </div>
         ) : (
-          <Button className="w-full" disabled={isChecking} onClick={onSetupClick}>
-            Set up
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button disabled={isChecking} onClick={onSetupClick}>
+              Set up
+            </Button>
+            {modsHref ? (
+              <Button asChild variant="secondary">
+                <Link href={modsHref}>Mods</Link>
+              </Button>
+            ) : null}
+          </div>
         )}
       </CardContent>
     </Card>
