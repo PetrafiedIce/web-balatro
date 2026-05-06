@@ -6,6 +6,7 @@ import type * as React from "react";
 
 import { CompatBadge } from "@/components/compat-badge";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { InstalledMod } from "@/lib/mod-storage";
 import type { ModEntry } from "@/lib/mod-registry";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ type InstalledModRowProps = {
   transform?: { x: number; y: number; scaleX: number; scaleY: number } | null;
   transition?: string;
   isDragging?: boolean;
+  disabledReason?: string;
   onToggle: (enabled: boolean) => void;
 };
 
@@ -31,10 +33,20 @@ export function InstalledModRow({
   transform,
   transition,
   isDragging = false,
+  disabledReason,
   onToggle,
 }: InstalledModRowProps) {
   const dragAttributes = attributes as React.ButtonHTMLAttributes<HTMLButtonElement> | undefined;
   const dragListeners = listeners as React.ButtonHTMLAttributes<HTMLButtonElement> | undefined;
+  const isDisabled = Boolean(disabledReason);
+  const switchControl = (
+    <Switch
+      checked={installedMod.enabled}
+      aria-label={`Enable ${entry.name}`}
+      disabled={isDisabled}
+      onCheckedChange={onToggle}
+    />
+  );
 
   return (
     <div
@@ -50,7 +62,8 @@ export function InstalledModRow({
     >
       <button
         type="button"
-        className="cursor-grab rounded-md p-1 text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
+        disabled={isDisabled}
+        className="cursor-grab rounded-md p-1 text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:cursor-not-allowed disabled:opacity-50"
         aria-label={`Drag ${entry.name}`}
         {...dragAttributes}
         {...dragListeners}
@@ -66,7 +79,18 @@ export function InstalledModRow({
           {entry.author} &middot; {installedMod.files.length} files &middot; {installedMod.version}
         </p>
       </div>
-      <Switch checked={installedMod.enabled} aria-label={`Enable ${entry.name}`} onCheckedChange={onToggle} />
+      {disabledReason ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{switchControl}</span>
+            </TooltipTrigger>
+            <TooltipContent>{disabledReason}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        switchControl
+      )}
     </div>
   );
 }

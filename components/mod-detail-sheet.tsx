@@ -11,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ModEntry } from "@/lib/mod-registry";
 
 type ModDetailSheetProps = {
@@ -18,6 +19,7 @@ type ModDetailSheetProps = {
   open: boolean;
   installLabel: string;
   installDisabled: boolean;
+  disabledReason?: string;
   onOpenChange: (open: boolean) => void;
   onInstall: (mod: ModEntry) => void;
 };
@@ -27,9 +29,16 @@ export function ModDetailSheet({
   open,
   installLabel,
   installDisabled,
+  disabledReason,
   onOpenChange,
   onInstall,
 }: ModDetailSheetProps) {
+  const installButton = mod ? (
+    <Button className="flex-1" disabled={installDisabled} onClick={() => onInstall(mod)}>
+      {installLabel}
+    </Button>
+  ) : null;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
@@ -88,9 +97,18 @@ export function ModDetailSheet({
             </div>
 
             <div className="mt-6 flex gap-2 border-t border-border pt-4">
-              <Button className="flex-1" disabled={installDisabled} onClick={() => onInstall(mod)}>
-                {installLabel}
-              </Button>
+              {installDisabled && disabledReason ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex flex-1">{installButton}</span>
+                    </TooltipTrigger>
+                    <TooltipContent>{disabledReason}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                installButton
+              )}
               <Button asChild size="icon" variant="outline">
                 <a aria-label="Open source" href={mod.source} rel="noreferrer" target="_blank">
                   <ExternalLink className="h-4 w-4" />

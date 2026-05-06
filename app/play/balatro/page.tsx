@@ -4,28 +4,34 @@ import { ArrowLeft, Maximize2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { GameCanvas } from "@/components/game-canvas";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { useBalatroRuntime } from "@/hooks/use-balatro-runtime";
+import { useGameSession } from "@/contexts/game-session-context";
 
 export default function BalatroPlayPage() {
-  const { error, launch, progress, status } = useBalatroRuntime();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const shellRef = useRef<HTMLDivElement>(null);
+  const { exitGame, isRunning, launchBalatro, runtime } = useGameSession();
+  const { error, progress, status } = runtime;
   const hasLaunchedRef = useRef(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isExitOpen, setIsExitOpen] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current || hasLaunchedRef.current) {
+    if (hasLaunchedRef.current || isRunning) {
       return;
     }
 
     hasLaunchedRef.current = true;
-    launch(canvasRef.current).catch(() => {
+    launchBalatro().catch(() => {
       hasLaunchedRef.current = false;
     });
-  }, [launch]);
+  }, [isRunning, launchBalatro]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -36,13 +42,9 @@ export default function BalatroPlayPage() {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const leaveGame = () => {
-    window.location.assign("/");
-  };
-
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
-      await shellRef.current?.requestFullscreen();
+      await document.documentElement.requestFullscreen();
       return;
     }
 
@@ -50,11 +52,13 @@ export default function BalatroPlayPage() {
   };
 
   return (
-    <main ref={shellRef} className="flex min-h-screen flex-col bg-background text-foreground">
-      <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4">
+    <main className="flex min-h-screen flex-col bg-background text-foreground">
+      <div className="relative z-20 flex h-14 items-center justify-between border-b border-border bg-background px-4">
         <div className="flex items-center gap-3">
-          <Button aria-label="Back to library" size="icon" variant="ghost" onClick={leaveGame}>
-            <ArrowLeft className="h-4 w-4" />
+          <Button asChild aria-label="Back to library" size="icon" variant="ghost">
+            <Link href="/">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
           </Button>
           <div>
             <p className="text-sm font-medium leading-none">Balatro</p>
@@ -69,29 +73,45 @@ export default function BalatroPlayPage() {
           <Button aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} size="icon" variant="outline" onClick={toggleFullscreen}>
             <Maximize2 className="h-4 w-4" />
           </Button>
-          <Button aria-label="Exit game" size="icon" variant="outline" onClick={leaveGame}>
+          <Button aria-label="Exit game" size="icon" variant="outline" onClick={() => setIsExitOpen(true)}>
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       <section className="relative min-h-0 flex-1 bg-black">
-        <GameCanvas ref={canvasRef} />
         {status !== "running" || progress.value < 100 ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/95">
+          <div className="fixed inset-x-0 bottom-0 top-14 z-10 flex items-center justify-center bg-background/95">
             <div className="w-full max-w-sm rounded-xl border border-border bg-card p-5">
               <p className="text-sm font-medium">Starting Balatro</p>
               <p className="mt-2 text-sm text-muted-foreground">{error ?? progress.label}</p>
               <Progress className="mt-4" value={status === "error" ? 100 : progress.value} />
               {status === "error" ? (
-                <Button className="mt-4 w-full" variant="secondary" onClick={leaveGame}>
-                  Return to library
+                <Button asChild className="mt-4 w-full" variant="secondary">
+                  <Link href="/">
+                    Return to library
+                  </Link>
                 </Button>
               ) : null}
             </div>
           </div>
         ) : null}
       </section>
+
+      <Dialog open={isExitOpen} onOpenChange={setIsExitOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exit Balatro?</DialogTitle>
+            <DialogDescription>Your progress is saved. Exiting ends the live browser session.</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex gap-2">
+            <Button onClick={exitGame}>Exit game</Button>
+            <Button variant="secondary" onClick={() => setIsExitOpen(false)}>
+              Keep playing
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

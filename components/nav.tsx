@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
 
+import { useGameSession } from "@/contexts/game-session-context";
 import { cn } from "@/lib/utils";
 
 export function Nav({ className }: { className?: string }) {
+  const { activeGame } = useGameSession();
+
   return (
     <header className={cn("border-b border-border bg-background", className)}>
       <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
@@ -17,6 +20,14 @@ export function Nav({ className }: { className?: string }) {
         </Link>
 
         <div className="flex items-center gap-1 text-sm">
+          {activeGame === "balatro" ? (
+            <Link
+              className="rounded-[10px] border border-border px-3 py-2 text-foreground hover:bg-muted"
+              href="/play/balatro"
+            >
+              Currently playing
+            </Link>
+          ) : null}
           <Link className="rounded-[10px] px-3 py-2 text-foreground hover:bg-muted" href="/">
             Library
           </Link>

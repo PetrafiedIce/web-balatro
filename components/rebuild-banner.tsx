@@ -2,10 +2,12 @@ import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type RebuildBannerProps = {
   actionHref?: string;
   actionLabel?: string;
+  disabledReason?: string;
   isRebuilding?: boolean;
   message?: string;
   onRebuild?: () => void;
@@ -14,10 +16,17 @@ type RebuildBannerProps = {
 export function RebuildBanner({
   actionHref,
   actionLabel = "Rebuild",
+  disabledReason,
   isRebuilding = false,
   message = "Installed mods changed since the last modded build. Rebuild before launching to apply the current loadout.",
   onRebuild,
 }: RebuildBannerProps) {
+  const rebuildButton = (
+    <Button disabled={isRebuilding || Boolean(disabledReason)} onClick={onRebuild}>
+      {isRebuilding ? "Rebuilding" : actionLabel}
+    </Button>
+  );
+
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex gap-3">
@@ -33,10 +42,17 @@ export function RebuildBanner({
         <Button asChild>
           <Link href={actionHref}>{actionLabel}</Link>
         </Button>
+      ) : disabledReason ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{rebuildButton}</span>
+            </TooltipTrigger>
+            <TooltipContent>{disabledReason}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ) : (
-        <Button disabled={isRebuilding} onClick={onRebuild}>
-          {isRebuilding ? "Rebuilding" : actionLabel}
-        </Button>
+        rebuildButton
       )}
     </div>
   );

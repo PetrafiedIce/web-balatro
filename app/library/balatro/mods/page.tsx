@@ -10,6 +10,7 @@ import { Nav } from "@/components/nav";
 import { RebuildBanner } from "@/components/rebuild-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useGameSession } from "@/contexts/game-session-context";
 import { useInstalledMods } from "@/hooks/use-installed-mods";
 import { useModInstaller } from "@/hooks/use-mod-installer";
 import { modRegistry, type ModEntry } from "@/lib/mod-registry";
@@ -20,7 +21,15 @@ const categoryOptions = ["all", "qol", "content", "cosmetic", "gameplay", "utili
 type TierFilter = (typeof tierOptions)[number];
 type CategoryFilter = (typeof categoryOptions)[number];
 
-function getInstallState(mod: ModEntry, hasLovelyDump: boolean) {
+function getInstallState(mod: ModEntry, hasLovelyDump: boolean, isGameRunning: boolean) {
+  if (isGameRunning) {
+    return {
+      canInstall: false,
+      reason: "Exit Balatro to manage mods (requires rebuild).",
+      label: "Game running",
+    };
+  }
+
   if (mod.tier === "incompatible") {
     return {
       canInstall: false,
@@ -47,6 +56,7 @@ function getInstallState(mod: ModEntry, hasLovelyDump: boolean) {
 export default function ModBrowserPage() {
   const installedMods = useInstalledMods();
   const installer = useModInstaller();
+  const { activeGame } = useGameSession();
   const [query, setQuery] = useState("");
   const [tier, setTier] = useState<TierFilter>("all");
   const [category, setCategory] = useState<CategoryFilter>("all");
@@ -54,6 +64,7 @@ export default function ModBrowserPage() {
   const [busyModId, setBusyModId] = useState<string | null>(null);
 
   const hasLovelyDump = Boolean(installedMods.state?.lovelyDump);
+  const isGameRunning = activeGame === "balatro";
   const installedIds = useMemo(
     () => new Set(installedMods.state?.installed.map((mod) => mod.id) ?? []),
     [installedMods.state],
@@ -155,7 +166,7 @@ export default function ModBrowserPage() {
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredMods.map((mod) => {
-            const installState = getInstallState(mod, hasLovelyDump);
+            const installState = getInstallState(mod, hasLovelyDump, isGameRunning);
 
             return (
               <ModCard
@@ -183,8 +194,9 @@ export default function ModBrowserPage() {
       </main>
 
       <ModDetailSheet
-        installDisabled={selectedMod ? !getInstallState(selectedMod, hasLovelyDump).canInstall : true}
-        installLabel={selectedMod ? getInstallState(selectedMod, hasLovelyDump).label : "Install"}
+        disabledReason={selectedMod ? getInstallState(selectedMod, hasLovelyDump, isGameRunning).reason : undefined}
+        installDisabled={selectedMod ? !getInstallState(selectedMod, hasLovelyDump, isGameRunning).canInstall : true}
+        installLabel={selectedMod ? getInstallState(selectedMod, hasLovelyDump, isGameRunning).label : "Install"}
         mod={selectedMod}
         onInstall={(mod) => void installMod(mod)}
         onOpenChange={(open) => {

@@ -18,23 +18,46 @@ import {
 } from "@dnd-kit/sortable";
 import { ArrowLeft, Download, FolderInput, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import { InstalledModRow } from "@/components/installed-mod-row";
 import { RebuildBanner } from "@/components/rebuild-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useGameSession } from "@/contexts/game-session-context";
 import { useInstalledMods } from "@/hooks/use-installed-mods";
 import { useModInstaller } from "@/hooks/use-mod-installer";
 import { modRegistry } from "@/lib/mod-registry";
 import type { InstalledMod } from "@/lib/mod-storage";
 
+const MOD_MANAGEMENT_DISABLED_REASON = "Exit Balatro to manage mods (requires rebuild).";
+
+function DisabledTooltip({ children, reason }: { children: ReactNode; reason?: string }) {
+  if (!reason) {
+    return children;
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">{children}</span>
+        </TooltipTrigger>
+        <TooltipContent>{reason}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 function SortableInstalledMod({
   installedMod,
+  disabledReason,
   onToggle,
 }: {
   installedMod: InstalledMod;
+  disabledReason?: string;
   onToggle: (enabled: boolean) => void;
 }) {
   const entry = modRegistry.find((candidate) => candidate.id === installedMod.id);
@@ -56,6 +79,7 @@ function SortableInstalledMod({
       setNodeRef={setNodeRef}
       transform={transform}
       transition={transition}
+      disabledReason={disabledReason}
       onToggle={onToggle}
     />
   );
@@ -64,8 +88,11 @@ function SortableInstalledMod({
 export default function InstalledModsPage() {
   const { state, isLoading, rebuildNeeded, refresh, toggleMod, reorderMods } = useInstalledMods();
   const installer = useModInstaller();
+  const { activeGame } = useGameSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isRebuilding, setIsRebuilding] = useState(false);
+  const isGameRunning = activeGame === "balatro";
+  const disabledReason = isGameRunning ? MOD_MANAGEMENT_DISABLED_REASON : undefined;
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -77,6 +104,10 @@ export default function InstalledModsPage() {
   const installedIds = installedMods.map((mod) => mod.id);
 
   async function handleDragEnd(event: DragEndEvent) {
+    if (isGameRunning) {
+      return;
+    }
+
     const { active, over } = event;
 
     if (!over || active.id === over.id) {
@@ -94,6 +125,10 @@ export default function InstalledModsPage() {
   }
 
   async function handleLovelyDump(fileList: FileList | null) {
+    if (isGameRunning) {
+      return;
+    }
+
     const file = fileList?.item(0);
 
     if (!file) {
@@ -105,6 +140,10 @@ export default function InstalledModsPage() {
   }
 
   async function handleRebuild() {
+    if (isGameRunning) {
+      return;
+    }
+
     setIsRebuilding(true);
 
     try {
@@ -148,10 +187,12 @@ export default function InstalledModsPage() {
                 Add mods
               </Link>
             </Button>
-            <Button variant="outline" onClick={() => inputRef.current?.click()}>
-              <FolderInput className="h-4 w-4" />
-              Import Lovely Dump
-            </Button>
+            <DisabledTooltip reason={disabledReason}>
+              <Button disabled={isGameRunning} variant="outline" onClick={() => inputRef.current?.click()}>
+                <FolderInput className="h-4 w-4" />
+                Import Lovely Dump
+              </Button>
+            </DisabledTooltip>
             <input
               ref={inputRef}
               type="file"
@@ -159,14 +200,22 @@ export default function InstalledModsPage() {
               className="hidden"
               onChange={(event) => void handleLovelyDump(event.currentTarget.files)}
             />
-            <Button disabled={isRebuilding || isLoading} onClick={handleRebuild}>
-              <Download className="h-4 w-4" />
-              Rebuild
-            </Button>
+            <DisabledTooltip reason={disabledReason}>
+              <Button disabled={isRebuilding || isLoading || isGameRunning} onClick={handleRebuild}>
+                <Download className="h-4 w-4" />
+                Rebuild
+              </Button>
+            </DisabledTooltip>
           </div>
         </section>
 
-        {rebuildNeeded ? <RebuildBanner onRebuild={handleRebuild} isRebuilding={isRebuilding} /> : null}
+        {rebuildNeeded ? (
+          <RebuildBanner
+            disabledReason={disabledReason}
+            onRebuild={handleRebuild}
+            isRebuilding={isRebuilding}
+          />
+        ) : null}
 
         {installer.progress.status !== "idle" ? (
           <Card>
@@ -219,6 +268,7 @@ export default function InstalledModsPage() {
                       <SortableInstalledMod
                         key={installedMod.id}
                         installedMod={installedMod}
+                        disabledReason={disabledReason}
                         onToggle={(enabled) => void toggleMod(installedMod.id, enabled)}
                       />
                     ))}
