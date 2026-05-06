@@ -2,6 +2,7 @@
 
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import type * as React from "react";
 
 import { CompatBadge } from "@/components/compat-badge";
 import { Switch } from "@/components/ui/switch";
@@ -12,8 +13,8 @@ import { cn } from "@/lib/utils";
 type InstalledModRowProps = {
   installedMod: InstalledMod;
   entry: ModEntry;
-  listeners?: Record<string, unknown>;
-  attributes?: Record<string, unknown>;
+  listeners?: unknown;
+  attributes?: unknown;
   setNodeRef?: (node: HTMLDivElement | null) => void;
   transform?: { x: number; y: number; scaleX: number; scaleY: number } | null;
   transition?: string;
@@ -32,6 +33,9 @@ export function InstalledModRow({
   isDragging = false,
   onToggle,
 }: InstalledModRowProps) {
+  const dragAttributes = attributes as React.ButtonHTMLAttributes<HTMLButtonElement> | undefined;
+  const dragListeners = listeners as React.ButtonHTMLAttributes<HTMLButtonElement> | undefined;
+
   return (
     <div
       ref={setNodeRef}
@@ -48,8 +52,8 @@ export function InstalledModRow({
         type="button"
         className="cursor-grab rounded-md p-1 text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
         aria-label={`Drag ${entry.name}`}
-        {...attributes}
-        {...listeners}
+        {...dragAttributes}
+        {...dragListeners}
       >
         <GripVertical className="h-4 w-4" />
       </button>

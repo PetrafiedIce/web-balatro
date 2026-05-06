@@ -200,7 +200,7 @@ export default function InstalledModsPage() {
             ) : (
               <div className="mb-4 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
                 Import a Lovely Dump zip to unlock experimental SMODS mods. Lobby will include it as the existing web-balatro
-                "Dump from Lovely" path during rebuilds.
+                &quot;Dump from Lovely&quot; path during rebuilds.
               </div>
             )}
 
