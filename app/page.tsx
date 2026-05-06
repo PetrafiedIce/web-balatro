@@ -15,11 +15,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useBalatroRuntime } from "@/hooks/use-balatro-runtime";
-import { gameCatalog } from "@/lib/game-catalog";
+import { gameCatalog, type CatalogGameStatus } from "@/lib/game-catalog";
 
 export default function LibraryPage() {
   const { buildFromFile, clearError, error, hasCachedVersion, progress, status } = useBalatroRuntime();
   const [hasBalatro, setHasBalatro] = useState<boolean | null>(null);
+  const balatroStatus: CatalogGameStatus = hasBalatro ? "ready" : "setup-needed";
 
   useEffect(() => {
     let cancelled = false;
@@ -47,11 +48,11 @@ export default function LibraryPage() {
         game.id === "balatro"
           ? {
               ...game,
-              status: hasBalatro ? "ready" : "setup-needed",
+              status: balatroStatus,
             }
           : game,
       ),
-    [hasBalatro],
+    [balatroStatus],
   );
 
   async function handleBuild(file: File) {
