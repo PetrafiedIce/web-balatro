@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import { getActiveBalatroVersion, MODDED_VERSION, readModState } from "@/lib/mod-storage";
+import { recordGameLaunch } from "@/lib/preferences";
 
 type RuntimeStatus = "idle" | "building" | "ready" | "running" | "error";
 
@@ -262,6 +263,7 @@ export function useBalatroRuntime() {
             throw new Error("Set up Balatro before launching it.");
           }
 
+          await recordGameLaunch("balatro");
           patchIndexedDbForVersion(version);
 
           const data = new Uint8Array(await cachedGame.arrayBuffer());

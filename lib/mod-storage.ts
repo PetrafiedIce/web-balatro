@@ -30,7 +30,7 @@ export type ModState = {
   updatedAt: number;
 };
 
-const DB_NAME = "LobbyModDB";
+const DB_NAME = "lobby_installed_mods";
 const DB_VERSION = 1;
 const STORE_NAME = "state";
 const STATE_KEY = "balatro";

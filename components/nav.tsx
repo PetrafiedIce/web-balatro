@@ -20,9 +20,12 @@ export function Nav({ className }: { className?: string }) {
           <Link className="rounded-[10px] px-3 py-2 text-foreground hover:bg-muted" href="/">
             Library
           </Link>
-          <a className="rounded-[10px] px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground" href="#">
+          <Link
+            className="rounded-[10px] px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+            href="/settings"
+          >
             Settings
-          </a>
+          </Link>
         </div>
       </nav>
     </header>

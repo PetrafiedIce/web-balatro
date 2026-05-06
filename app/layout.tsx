@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { PersistenceProvider } from "@/components/persistence-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} min-h-screen bg-background font-sans text-foreground antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          {children}
+          <PersistenceProvider>{children}</PersistenceProvider>
         </ThemeProvider>
       </body>
     </html>

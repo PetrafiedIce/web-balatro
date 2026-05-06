@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { BackupReminder } from "@/components/backup-reminder";
 import { GameCard } from "@/components/game-card";
 import { Nav } from "@/components/nav";
 import { SetupDropzone } from "@/components/setup-dropzone";
+import { StorageIndicator } from "@/components/storage-indicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -65,6 +67,8 @@ export default function LibraryPage() {
       <Nav />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-10">
+        <BackupReminder />
+
         <section className="flex flex-col gap-2">
           <p className="text-xs font-medium tracking-[0.22em] text-muted-foreground">Your library</p>
           <h1 className="text-3xl font-medium tracking-[-0.03em] text-foreground">Games</h1>
@@ -122,6 +126,10 @@ export default function LibraryPage() {
             </CardContent>
           </Card>
         )}
+
+        <footer className="flex justify-end">
+          <StorageIndicator />
+        </footer>
       </main>
 
       <Dialog open={status === "error" && Boolean(error)} onOpenChange={clearError}>
