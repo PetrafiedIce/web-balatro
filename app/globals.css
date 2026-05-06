@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground));
+  --color-border: rgb(var(--border));
+  --color-card: rgb(var(--card));
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-foreground));
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: 255 255 255;
+  --foreground: 18 18 18;
+  --muted: 246 246 247;
+  --muted-foreground: 108 108 116;
+  --border: 226 226 229;
+  --card: 255 255 255;
+  --primary: 18 18 18;
+  --primary-foreground: 255 255 255;
+}
+
+.dark {
+  --background: 10 10 11;
+  --foreground: 242 242 243;
+  --muted: 24 24 27;
+  --muted-foreground: 161 161 170;
+  --border: 39 39 42;
+  --card: 14 14 16;
+  --primary: 242 242 243;
+  --primary-foreground: 10 10 11;
+}
+
+* {
+  border-color: rgb(var(--border));
+}
+
+html {
+  min-height: 100%;
+  background: rgb(var(--background));
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-weight: 400;
+  text-rendering: geometricPrecision;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#canvas {
+  display: block;
+  outline: none;
+  touch-action: none;
+}
