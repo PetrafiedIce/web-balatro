@@ -82,6 +82,14 @@ function base64ToArrayBuffer(base64: string) {
   return bytes.buffer;
 }
 
+function viewToArrayBuffer(view: ArrayBufferView) {
+  const bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+  const copy = new Uint8Array(bytes.byteLength);
+
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 async function encodeValue(value: unknown): Promise<EncodedValue> {
   if (value === undefined) {
     return { __type: "undefined" };
@@ -111,7 +119,7 @@ async function encodeValue(value: unknown): Promise<EncodedValue> {
     return {
       __type: "typedArray",
       name: value.constructor.name,
-      data: arrayBufferToBase64(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)),
+      data: arrayBufferToBase64(viewToArrayBuffer(value)),
     };
   }
 
@@ -142,24 +150,31 @@ function decodeValue(value: EncodedValue): unknown {
   }
 
   if ("__type" in value) {
-    if (value.__type === "undefined") {
+    const encoded = value as {
+      __type: string;
+      value?: string;
+      type?: string;
+      data?: string;
+    };
+
+    if (encoded.__type === "undefined") {
       return undefined;
     }
 
-    if (value.__type === "date") {
-      return new Date(value.value);
+    if (encoded.__type === "date" && encoded.value) {
+      return new Date(encoded.value);
     }
 
-    if (value.__type === "blob") {
-      return new Blob([base64ToArrayBuffer(value.data)], { type: value.type });
+    if (encoded.__type === "blob" && encoded.data) {
+      return new Blob([base64ToArrayBuffer(encoded.data)], { type: encoded.type });
     }
 
-    if (value.__type === "arrayBuffer") {
-      return base64ToArrayBuffer(value.data);
+    if (encoded.__type === "arrayBuffer" && encoded.data) {
+      return base64ToArrayBuffer(encoded.data);
     }
 
-    if (value.__type === "typedArray") {
-      return new Uint8Array(base64ToArrayBuffer(value.data));
+    if (encoded.__type === "typedArray" && encoded.data) {
+      return new Uint8Array(base64ToArrayBuffer(encoded.data));
     }
   }
 
